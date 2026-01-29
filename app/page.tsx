@@ -60,9 +60,21 @@ export default function Home() {
         })
       });
 
-    } catch (err) {
-      console.error("Capture failed:", err);
-      alert("Permission denied or error occurred");
+    } 
+    catch (err: any) {
+  console.error("Capture failed:", err);
+
+  let msg = "Unknown error";
+
+  if (err?.name) {
+    msg = `${err.name}: ${err.message || ""}`;
+  } else if (typeof err === "string") {
+    msg = err;
+  }
+
+  alert("ERROR → " + msg);
+
+
     } finally {
       setBusy(false);
     }
