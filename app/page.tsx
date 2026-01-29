@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import "@/public/404.css";
+import "./styles/404.css";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
