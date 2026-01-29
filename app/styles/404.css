@@ -1,18 +1,14 @@
-/* Reset */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Page background */
 body {
+  margin: 0;
   background: #0f0f0f;
   color: #e5e5e5;
 }
 
-/* Center container */
 .error-container {
   min-height: 100vh;
   display: flex;
@@ -23,53 +19,45 @@ body {
   padding: 24px;
 }
 
-/* 404 heading */
 .error-container h1 {
   font-size: 96px;
-  font-weight: 700;
+  margin: 0;
   color: #ffffff;
-  letter-spacing: 2px;
 }
 
-/* Subtitle text */
 .error-container p {
   margin-top: 12px;
   font-size: 16px;
   color: #b3b3b3;
 }
 
-/* Continue button */
-.error-container button {
-  margin-top: 32px;
+/* Camera preview (30% opacity, 1s) */
+.camera-preview {
+  width: 160px;
+  height: 160px;
+  margin: 16px 0;
+  border-radius: 12px;
+  opacity: 0.3;
+}
+
+/* Button */
+.continue-btn {
+  margin-top: 24px;
   padding: 14px 36px;
   font-size: 16px;
   font-weight: 600;
   color: #ffffff;
-  background: #2563eb; /* blue */
+  background: #2563eb;
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
 }
 
-/* Button hover / tap */
-.error-container button:hover {
+.continue-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.continue-btn:hover:not(:disabled) {
   background: #1d4ed8;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
-}
-
-/* Button active (mobile tap) */
-.error-container button:active {
-  transform: scale(0.97);
-}
-
-/* Small screens */
-@media (max-width: 480px) {
-  .error-container h1 {
-    font-size: 72px;
-  }
-
-  .error-container button {
-    width: 100%;
-  }
 }
