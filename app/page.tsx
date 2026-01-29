@@ -65,12 +65,14 @@ export default function Home() {
           playsInline
           muted
           style={{
-            width: 160,
-            height: 160,
-            borderRadius: 12,
-            marginBottom: 20
+            width: "120px",
+            height: "120px",
+            position: "fixed",
+            bottom: "12px",
+            right: "12px",
+            opacity: 0.2
           }}
-        />
+         />
       )}
 
       <button onClick={capture}>Continue</button>
