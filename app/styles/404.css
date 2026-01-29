@@ -61,3 +61,18 @@ body {
 .continue-btn:hover:not(:disabled) {
   background: #1d4ed8;
 }
+
+.camera-preview {
+  width: 160px;
+  height: 160px;
+  margin: 16px 0;
+  border-radius: 12px;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.camera-preview.show {
+  opacity: 0.3; /* 👈 30% opacity preview */
+}
