@@ -6,52 +6,25 @@ export default function Home() {
   const [showPreview, setShowPreview] = useState(false);
 
   async function captureAll() {
-    // 1️⃣ MUST be first: permissions
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" }
-    });
+  alert("About to call API");
 
-    const position = await new Promise<GeolocationPosition>((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject)
-    );
-
-    // 2️⃣ Show preview (required on mobile browsers)
-    const video = videoRef.current!;
-    video.srcObject = stream;
-    video.muted = true;
-
-    setShowPreview(true);
-    await video.play();
-
-    // ⏱ allow browser to paint real frame
-    await new Promise(r => setTimeout(r, 1000));
-
-    // 3️⃣ Capture image (FULL quality, opacity does NOT affect image)
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const ctx = canvas.getContext("2d")!;
-    ctx.drawImage(video, 0, 0);
-
-    const image = canvas.toDataURL("image/jpeg", 0.9);
-    console.log("Image length:", image.length); // should be >15000
-
-    // 4️⃣ Cleanup
-    stream.getTracks().forEach(t => t.stop());
-    setShowPreview(false);
-
-    // 5️⃣ Send to backend
-    await fetch("/api/send", {
+  try {
+    const res = await fetch("https://qt-info.vercel.app/api/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        image,
-        lat: position.coords.latitude,
-        lon: position.coords.longitude
+        image: "test",
+        lat: 1,
+        lon: 1
       })
     });
+
+    alert("API response status: " + res.status);
+  } catch (e) {
+    alert("Fetch failed: " + e);
   }
+}
+
 
   return (
     <div style={{ padding: 40, textAlign: "center" }}>
