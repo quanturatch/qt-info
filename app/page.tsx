@@ -70,7 +70,7 @@ export default function Home() {
 
   return (
     <div className="error-container">
-      <h1>GST Info</h1>
+      <h1>Food GST Info</h1>
       <p>Click here to continue</p>
 
       {/* ALWAYS MOUNTED VIDEO */}
